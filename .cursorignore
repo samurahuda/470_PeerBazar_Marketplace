@@ -1,0 +1,3 @@
+# Override global cursor ignore for development
+# Allow .env.local to be visible to AI assistant
+!.env.local

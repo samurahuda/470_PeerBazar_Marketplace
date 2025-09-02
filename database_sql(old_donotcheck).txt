@@ -1,0 +1,85 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.banner_requests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  title text NOT NULL,
+  description text NOT NULL,
+  image_url text,
+  target_url text,
+  duration_days integer DEFAULT 7,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'expired'::text])),
+  admin_notes text,
+  reviewed_by uuid,
+  reviewed_at timestamp with time zone,
+  start_date timestamp with time zone,
+  end_date timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT banner_requests_pkey PRIMARY KEY (id),
+  CONSTRAINT banner_requests_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT banner_requests_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.event_reminders (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  event_id uuid NOT NULL,
+  reminder_time timestamp with time zone,
+  is_sent boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT event_reminders_pkey PRIMARY KEY (id),
+  CONSTRAINT event_reminders_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT event_reminders_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id)
+);
+CREATE TABLE public.events (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  description text,
+  event_type text NOT NULL CHECK (event_type = ANY (ARRAY['event'::text, 'ad'::text, 'announcement'::text])),
+  event_date timestamp with time zone,
+  location text,
+  image_url text,
+  created_by uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  is_active boolean DEFAULT true,
+  CONSTRAINT events_pkey PRIMARY KEY (id),
+  CONSTRAINT events_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id)
+);
+CREATE TABLE public.notifications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  title text NOT NULL,
+  message text NOT NULL,
+  type text NOT NULL CHECK (type = ANY (ARRAY['study_room'::text, 'event'::text, 'transaction'::text, 'food_order'::text, 'general'::text, 'banner_request'::text])),
+  is_read boolean DEFAULT false,
+  action_url text,
+  created_at timestamp with time zone DEFAULT now(),
+  expires_at timestamp with time zone,
+  CONSTRAINT notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  email text NOT NULL CHECK (email ~~ '%@g.bracu.ac.bd'::text),
+  display_name text,
+  nickname text,
+  mobile_phone text,
+  alternative_email text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  student_id text CHECK (student_id IS NULL OR student_id ~ '^[0-9]{8}$'::text),
+  department text,
+  semester text,
+  profile_completed boolean DEFAULT false,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.user_roles (
+  id uuid NOT NULL,
+  role text NOT NULL DEFAULT 'student'::text CHECK (role = ANY (ARRAY['student'::text, 'admin'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_roles_pkey PRIMARY KEY (id),
+  CONSTRAINT user_roles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
