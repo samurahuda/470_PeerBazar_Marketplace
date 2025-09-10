@@ -51,11 +51,15 @@ export interface JobApplication {
   applied_at: string; // timestamptz
 }
 
-export interface Giveaway extends MarketplaceItem {
-  posted_by: string; // User ID of the poster
-  claimed_by?: string; // User ID of the claimant
-  claimed_at?: string; // Timestamp when the item was claimed
-  // ... other giveaway specific fields
+export interface GiveawayPost {
+  id: string; // UUID
+  seller_id: string; // UUID
+  title: string;
+  description?: string;
+  image_url?: string;
+  status: 'available' | 'claimed' | 'removed';
+  created_at: string; // timestamptz
+  updated_at: string; // timestamptz
 }
 
 export interface GiveawayClaim {

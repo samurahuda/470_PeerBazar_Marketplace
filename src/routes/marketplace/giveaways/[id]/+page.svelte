@@ -4,6 +4,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { Label } from '$lib/components/ui/label';
+  import { invalidateAll } from '$app/navigation';
 
   export let data: PageData;
   export let form: ActionData;
@@ -22,7 +23,18 @@
         {#if data.giveaway.status === 'available'}
           <div class="p-4 border rounded-lg bg-gray-50">
             <h3 class="text-lg font-semibold mb-2">Claim this Item</h3>
-            <form method="POST" action="?/claimGiveaway" use:enhance class="space-y-3">
+            <form 
+              method="POST" 
+              action="?/claimGiveaway" 
+              use:enhance={() => {
+                return async ({ result }) => {
+                  if (result.type === 'success') {
+                    await invalidateAll();
+                  }
+                };
+              }}
+              class="space-y-3"
+            >
               <div>
                 <Label for="phone_number">Phone Number</Label>
                 <Input id="phone_number" name="phone_number" type="tel" required placeholder="Enter your phone number" />

@@ -38,8 +38,12 @@ export async function getSellerNotifications(supabase: SupabaseClient, userId: s
   return data as SellerNotification[] || [];
 }
 
-export async function createSellerNotification(notificationData: CreateSellerNotificationInput): Promise<SellerNotification> {
-  console.log('Inside createSellerNotification. Data:', notificationData); // Log data being inserted
+export async function createSellerNotification(notificationData: CreateSellerNotificationInput): Promise<SellerNotification | null> {
+  if (!notificationData.user_id) {
+    console.warn('Attempted to create a seller notification without a user_id. Aborting.');
+    return null;
+  }
+
   const { data, error } = await supabaseAdmin
     .from('seller_notifications')
     .insert(notificationData)
@@ -48,9 +52,8 @@ export async function createSellerNotification(notificationData: CreateSellerNot
 
   if (error) {
     console.error('Error inserting into seller_notifications:', error); // Log insertion error
-    throw new Error(`Failed to create seller notification: ${error.message}`);
+    return null;
   }
-  console.log('Successfully inserted into seller_notifications. Data:', data); // Log successful insertion
   return data as SellerNotification;
 }
 

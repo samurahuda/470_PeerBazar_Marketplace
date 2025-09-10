@@ -114,32 +114,25 @@ export const actions: Actions = {
   },
 
   createGiveaway: async ({ request, locals: { supabase } }) => {
-    console.log(request);
     const { data: { user: actionUser } } = await supabase.auth.getUser();
     if (!actionUser) return fail(401, { error: 'Unauthorized' });
 
     const formData = await request.formData();
     let imageUrl: string | undefined = undefined;
     const imageFile = formData.get('image_file') as File;
-    console.log('Image file received:', imageFile);
 
     if (imageFile && imageFile.size > 0) {
       const fileName = `${actionUser.id}/${crypto.randomUUID()}-${imageFile.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('giveaway-images') // Using a new bucket for giveaway images
         .upload(fileName, imageFile, { cacheControl: '3600', upsert: false });
-
-      console.log('Supabase upload data:', uploadData);
-      console.log('Supabase upload error:', uploadError);
 
       if (uploadError) {
         console.error('Supabase image upload error:', uploadError);
         return fail(500, { error: `Failed to upload image: ${uploadError.message}` });
       }
       const { data: publicUrlData } = supabase.storage.from('giveaway-images').getPublicUrl(fileName);
-      console.log('Supabase public URL data:', publicUrlData);
       imageUrl = publicUrlData.publicUrl;
-      console.log('Generated image URL:', imageUrl);
     }
 
     const giveawayData = {
